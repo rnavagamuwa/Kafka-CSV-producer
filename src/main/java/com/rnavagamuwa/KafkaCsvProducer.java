@@ -18,6 +18,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
+/**
+ * @author rnavagamuwa
+ */
 public class KafkaCsvProducer {
     private static final Logger logger = LogManager.getLogger(KafkaCsvProducer.class);
     private static String kafkaTopic = null;
@@ -33,14 +36,10 @@ public class KafkaCsvProducer {
         return new KafkaProducer<>(properties);
     }
 
-    public void initialize(String[] args) {
-        if (args != null && args.length == 3) {
-            kafkaTopic = args[0];
-            csvFileLocation = args[1];
-            kafkaJavaConfigLocation = args[2];
-        } else {
-            logger.error("Required parameters are not passed.");
-        }
+    public KafkaCsvProducer(String kafkaTopic, String csvFileLocation, String kafkaJavaConfigLocation) {
+        KafkaCsvProducer.kafkaTopic = kafkaTopic;
+        KafkaCsvProducer.csvFileLocation = csvFileLocation;
+        KafkaCsvProducer.kafkaJavaConfigLocation = kafkaJavaConfigLocation;
     }
 
     public void PublishMessages() {
@@ -52,6 +51,7 @@ public class KafkaCsvProducer {
             long publishedCount = 0;
             long totalRowCount = 0;
             String[] columnNames = new String[0];
+            logger.info("Started publishing events to the kafka topic : {} ...",kafkaTopic);
             while ((line = br.readLine()) != null) {
 
                 if (isTitleRow) {
@@ -86,6 +86,9 @@ public class KafkaCsvProducer {
                     }
                 });
                 publishedCount++;
+                if (publishedCount / 100000 > 1) {
+                    logger.info("{} events has been published.", publishedCount);
+                }
             }
             logger.info("Completed publishing messages.");
             logger.info("Total row count : {} | Published row count : {}", totalRowCount, publishedCount);
