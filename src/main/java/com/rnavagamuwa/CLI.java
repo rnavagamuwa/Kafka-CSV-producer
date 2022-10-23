@@ -2,6 +2,7 @@ package com.rnavagamuwa;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 /**
  * @author rnavagamuwa
@@ -16,7 +17,7 @@ public class CLI implements Runnable {
     private String kafkaConfig = Paths.get("").toAbsolutePath() + File.separator + "kafka.config";
 
     @CommandLine.Option(required = true, names = {"--csv-path"})
-    private String csvLocation;
+    public static String csvLocation;
 
     @CommandLine.Option(required = true, names = {"--kafka-topic"})
     private String kafkaTopic;
@@ -27,7 +28,9 @@ public class CLI implements Runnable {
 
     @Override
     public void run() {
-        KafkaCsvProducer kafkaCsvProducer = new KafkaCsvProducer(kafkaTopic, csvLocation, kafkaConfig);
+        KafkaCsvProducer kafkaCsvProducer = new KafkaCsvProducer(kafkaTopic,
+                Objects.nonNull(csvLocation) ? new FileCSVReader() : new S3CSVReader(),
+                kafkaConfig);
         kafkaCsvProducer.PublishMessages();
     }
 }

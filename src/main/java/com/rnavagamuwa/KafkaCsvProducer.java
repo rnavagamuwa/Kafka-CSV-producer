@@ -24,8 +24,9 @@ import java.util.UUID;
 public class KafkaCsvProducer {
     private static final Logger logger = LogManager.getLogger(KafkaCsvProducer.class);
     private static String kafkaTopic = null;
-    private static String csvFileLocation = null;
     private static String kafkaJavaConfigLocation;
+
+    private CSVReader csvReader;
 
     private Producer<String, String> ProducerProperties() {
         final Properties properties = loadConfig(kafkaJavaConfigLocation);
@@ -36,16 +37,16 @@ public class KafkaCsvProducer {
         return new KafkaProducer<>(properties);
     }
 
-    public KafkaCsvProducer(String kafkaTopic, String csvFileLocation, String kafkaJavaConfigLocation) {
+    public KafkaCsvProducer(String kafkaTopic,CSVReader csvReader,String kafkaJavaConfigLocation) {
         KafkaCsvProducer.kafkaTopic = kafkaTopic;
-        KafkaCsvProducer.csvFileLocation = csvFileLocation;
+        this.csvReader = csvReader;
         KafkaCsvProducer.kafkaJavaConfigLocation = kafkaJavaConfigLocation;
     }
 
     public void PublishMessages() {
         logger.info("Started publishing messages ...");
         final Producer<String, String> CsvProducer = ProducerProperties();
-        try (BufferedReader br = new BufferedReader(new FileReader(csvFileLocation))) {
+        try (BufferedReader br = this.csvReader.readCSV()) {
             String line;
             boolean isTitleRow = true;
             long publishedCount = 0;
@@ -93,7 +94,7 @@ public class KafkaCsvProducer {
             logger.info("Completed publishing messages.");
             logger.info("Total row count : {} | Published row count : {}", totalRowCount, publishedCount);
         } catch (IOException e) {
-            logger.error("CSV file location is incorrect : {}", csvFileLocation);
+            logger.error("Error when reading the file", e);
         }
     }
 
